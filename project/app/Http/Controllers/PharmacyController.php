@@ -1,69 +1,85 @@
 <?php
-
-// app/Http/Controllers/PharmacyController.php
 namespace App\Http\Controllers;
 
-use App\Models\Pharmacy;
-use App\Models\ListMedicine;
 use Illuminate\Http\Request;
+use App\Models\Pharmacy;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class PharmacyController extends Controller
 {
+    // Show all pharmacies
     public function index()
     {
-        $pharmacies = Pharmacy::with('medicines')->get();
+        $pharmacies = Pharmacy::all();  // Retrieve all pharmacies from the database
         return view('pharmacies.index', compact('pharmacies'));
     }
 
+    // Show form to create a new pharmacy
     public function create()
     {
         return view('pharmacies.create');
     }
 
+    // Store new pharmacy in the database
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|unique:pharmacies,name',
-            'location' => 'required|string',
+            'name' => 'required|string',
+            'address' => 'required|string',
+            'phone' => 'required|string',
+            'email' => 'required|email|unique:pharmacies',
+            'password' => 'required|string|min:6',
         ]);
 
-        Pharmacy::create($request->all());
-        return redirect()->route('pharmacies.index')->with('success', 'Pharmacy created successfully.');
+        Pharmacy::create([
+            'name' => $request->name,
+            'address' => $request->address,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->route('pharmacies.index')->with('success', 'Pharmacy added successfully');
     }
 
-    public function show($id)
+    // Show form to edit an existing pharmacy
+    public function edit($id)
     {
-        // Get the pharmacy by ID
+        $pharmacy = Pharmacy::findOrFail($id);
+        return view('pharmacies.edit', compact('pharmacy'));
+    }
+
+    // Update an existing pharmacy record
+    public function update(Request $request, $id)
+    {
         $pharmacy = Pharmacy::findOrFail($id);
 
-        // Get all medicines from the database
-        $medicines = Medicine::all();
-
-        return view('pharmacies.show', compact('pharmacy', 'medicines'));
-    }
-
-    public function addMedicine(Request $request, $pharmacy_id)
-    {
-        // Validate the request
         $request->validate([
-            'medicine_id' => 'required|exists:medicines,id',
-            'quantity' => 'required|integer|min:1',
+            'name' => 'required|string',
+            'address' => 'required|string',
+            'phone' => 'required|string',
+            'email' => 'required|email|unique:pharmacies,email,' . $pharmacy->id,
+            'password' => 'nullable|string|min:6',  // Optional password update
         ]);
 
-        // Find the pharmacy
-        $pharmacy = Pharmacy::findOrFail($pharmacy_id);
+        $pharmacy->update([
+            'name' => $request->name,
+            'address' => $request->address,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'password' => $request->password ? Hash::make($request->password) : $pharmacy->password,
+        ]);
 
-        // Find the selected medicine
-        $medicine = Medicine::findOrFail($request->medicine_id);
-
-        // Add the medicine to the pharmacy with quantity
-        $pharmacy->medicines()->attach($medicine, ['quantity' => $request->quantity]);
-
-        return redirect()->route('pharmacies.show', $pharmacy->id)
-            ->with('success', 'Medicine added to pharmacy successfully!');
+        return redirect()->route('pharmacies.index')->with('success', 'Pharmacy updated successfully');
     }
 
+    // Delete a pharmacy from the database
+    public function destroy($id)
+    {
+        $pharmacy = Pharmacy::findOrFail($id);
+        $pharmacy->delete();
 
-
-
+        return redirect()->route('pharmacies.index')->with('success', 'Pharmacy deleted successfully');
+    }
 }

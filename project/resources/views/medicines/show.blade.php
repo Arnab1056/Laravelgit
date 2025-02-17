@@ -2,51 +2,48 @@
 
 @section('content')
 
-    <div class="row">
-        <div class="col-lg-12 margin-tb">
-            <div class="pull-left">
-                <h2>Show Medicine</h2>
-            </div>
-            <div class="pull-right">
-                <a class="btn btn-primary" href="{{ route('medicines.index') }}">Back</a>
-            </div>
-        </div>
-    </div>
+    <!-- Link to the CSS file -->
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
-    <div class="row">
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Name:</strong>
-                {{ $medicine->name }}
-            </div>
-        </div>
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="card p-4 shadow-lg w-50">
+            <h2 class="text-center mb-4">Show Medicine</h2>
+            <form action="{{ route('medicines.store') }}" method="POST">
+                @csrf
+                <div class="text-center form-group mb-3">
+                    <h5><strong><label>Name</label></strong></h5>
+                    <h4> {{ $medicine->name }}
+                        <h4>
+                </div>
 
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Date:</strong>
-                {{ $medicine->date }}
-            </div>
-        </div>
+                <div class="text-center form-group mb-3">
+                    <h5><strong><label>Date</label></strong></h5>
+                    <h4> {{ $medicine->date }}
+                        <h4>
+                </div>
 
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Details:</strong>
-                {{ $medicine->detail }}
-            </div>
-        </div>
+                <div class="text-center form-group mb-3">
+                    <h5><strong><label>Details</label></strong></h5>
+                    <h4> {{ $medicine->detail }}
+                        <h4>
+                </div>
+                <div class="text-center form-group mb-3">
+                    <h5><strong><label>Quantity</label></strong></h5>
+                    <h4> {{ $medicine->quantity }}
+                        <h4>
+                </div>
+                <div class="text-center form-group mb-3">
+                    <h5><strong><label>Selled</label></strong></h5>
+                    <h4> {{ $medicine->selled }}
+                        <h4>
+                </div>
 
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Quantity:</strong>
-                {{ $medicine->quantity }}
-            </div>
-        </div>
 
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Selled:</strong>
-                {{ $medicine->selled }}
-            </div>
+                <div class="text-center">
+                    <a class="btn btn-primary" href="{{ route('medicines.index') }}">Back</a>
+                </div>
+
+            </form>
         </div>
     </div>
 

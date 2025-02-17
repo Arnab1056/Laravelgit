@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Medicine;
@@ -7,114 +6,85 @@ use Illuminate\Http\Request;
 
 class MedicineController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $medicines = Medicine::latest()->paginate(5);  // Get medicines and paginate
-        return view('medicines.index', compact('medicines'))
-            ->with('i', (request()->input('page', 1) - 1) * 5);  // Index calculation for pagination
+        $medicines = Medicine::paginate(5);
+        $i = (request()->input('page', 1) - 1) * 5; // Calculate the index based on the current page
+        return view('medicines.index', compact('medicines', 'i'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('medicines.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        // Validate input
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required',
             'date' => 'required|date',
-            'detail' => 'required|string',
-            'quantity' => 'required|integer|min:0',
+            'detail' => 'required',
+            'selled' => 'required|integer',
+            'quantity' => 'required|integer',
         ]);
 
-        // Store the medicine
         Medicine::create($request->all());
-
-        return redirect()->route('medicines.index')
-            ->with('success', 'Medicine added successfully.');
+        return redirect()->route('medicines.index')->with('success', 'Medicine created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Medicine $medicine)
+    public function show($id)
     {
+        $medicine = Medicine::find($id);
         return view('medicines.show', compact('medicine'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Medicine $medicine)
+    public function edit($id)
     {
+        $medicine = Medicine::find($id);
         return view('medicines.edit', compact('medicine'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Medicine $medicine)
+    public function update(Request $request, $id)
     {
-        // Validate input
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'date' => 'required|date',
-            'detail' => 'required|string',
-            'quantity' => 'required|integer|min:0',
-        ]);
+        $medicine = Medicine::find($id);
 
-        // Update the medicine
-        $medicine->update($request->all());
+        if ($medicine) {
+            // If 'selled' is provided in the request, update it
+            $selled = $request->has('selled') ? $request->selled : $medicine->selled;
 
-        return redirect()->route('medicines.index')
-            ->with('success', 'Medicine updated successfully.');
+            $medicine->update([
+                'name' => $request->name,
+                'date' => $request->date,
+                'detail' => $request->detail,
+                'selled' => $selled, // Use the previous selled value if not updated
+                'quantity' => $request->quantity,
+            ]);
+
+            return redirect()->route('medicines.index')->with('success', 'Medicine updated successfully.');
+        }
+
+        return redirect()->route('medicines.index')->with('error', 'Medicine not found.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Medicine $medicine)
+    public function destroy($id)
     {
-        // Delete the medicine
-        $medicine->delete();
-
-        return redirect()->route('medicines.index')
-            ->with('success', 'Medicine deleted successfully.');
+        Medicine::find($id)->delete();
+        return redirect()->route('medicines.index')->with('success', 'Medicine deleted successfully.');
     }
 
-    /**
-     * Handle selling a medicine (decrease quantity and increase selled count).
-     */
     public function sell($id)
     {
-        // Find the medicine by its ID
-        $medicine = Medicine::findOrFail($id);
+        $medicine = Medicine::find($id);
 
-        // Check if there's enough stock to sell
-        if ($medicine->quantity > 0) {
-            // Decrease quantity and increase selled count
-            $medicine->quantity -= 1;
-            $medicine->selled += 1;
+        // Check if the medicine exists and if there is enough quantity to sell
+        if ($medicine && $medicine->quantity > 0) {
+            $medicine->selled += 1; // Increment the sold count
+            $medicine->quantity -= 1; // Decrement the available quantity
+            $medicine->save(); // Save the changes
 
-            // Save the changes to the database
-            $medicine->save();
-
-            // Redirect to the medicines index page with a success message
             return redirect()->route('medicines.index')->with('success', 'Medicine sold successfully.');
         }
 
-        // If there's not enough stock, show an error message
-        return redirect()->route('medicines.index')->with('error', 'Not enough stock available.');
+        return redirect()->route('medicines.index')->with('error', 'Not enough quantity to sell.');
     }
 }

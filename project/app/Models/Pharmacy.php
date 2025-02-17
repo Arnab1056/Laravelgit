@@ -9,10 +9,11 @@ class Pharmacy extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'address'];
-
-    public function medicines()
-    {
-        return $this->belongsToMany(Medicine::class, 'pharmacy_medicine');
-    }
+    protected $fillable = [
+        'name',
+        'address',
+        'phone',
+        'email',
+        'password',
+    ];
 }
