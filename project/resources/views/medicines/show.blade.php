@@ -33,7 +33,7 @@
                         <h4>
                 </div>
                 <div class="text-center form-group mb-3">
-                    <h5><strong><label>Selled</label></strong></h5>
+                    <h5><strong><label>Sold</label></strong></h5>
                     <h4> {{ $medicine->selled }}
                         <h4>
                 </div>

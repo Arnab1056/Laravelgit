@@ -9,11 +9,24 @@ class Pharmacy extends Model
 {
     use HasFactory;
 
+    protected $table = 'pharmacies'; // Ensure the table name is correct
+
     protected $fillable = [
         'name',
-        'address',
-        'phone',
+        'location',
         'email',
-        'password',
+        'phone',
+        'role',
+        'user_id',
     ];
+
+    public function medicines()
+    {
+        return $this->belongsToMany(Medicine::class)->withPivot('quantity');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

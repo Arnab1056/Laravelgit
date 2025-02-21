@@ -25,4 +25,9 @@ class ButtonController extends Controller
     {
         return "This is Route 3";
     }
+
+    public function searchPage()
+    {
+        return view('search');
+    }
 }

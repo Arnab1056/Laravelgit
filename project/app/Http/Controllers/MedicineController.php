@@ -6,9 +6,12 @@ use Illuminate\Http\Request;
 
 class MedicineController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $medicines = Medicine::paginate(5);
+        $search = $request->query('search');
+        $medicines = Medicine::when($search, function ($query, $search) {
+            return $query->where('name', 'like', "%{$search}%");
+        })->paginate(5);
         $i = (request()->input('page', 1) - 1) * 5; // Calculate the index based on the current page
         return view('medicines.index', compact('medicines', 'i'));
     }
@@ -21,15 +24,28 @@ class MedicineController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'date' => 'required|date',
-            'detail' => 'required',
+            'name' => 'required|unique:medicines,name',
+            'date' => 'nullable|date',
+            'detail' => 'nullable|string',
             'selled' => 'required|integer',
             'quantity' => 'required|integer',
         ]);
 
-        Medicine::create($request->all());
-        return redirect()->route('medicines.index')->with('success', 'Medicine created successfully.');
+        try {
+            $medicine = new Medicine([
+                'name' => $request->get('name'),
+                'date' => $request->get('date'),
+                'detail' => $request->get('detail'),
+                'selled' => $request->get('selled'),
+                'quantity' => $request->get('quantity'),
+            ]);
+
+            $medicine->save();
+
+            return redirect()->route('medicines.index')->with('success', 'Medicine added successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('medicines.create')->with('error', 'Medicine with the same name already exists.');
+        }
     }
 
     public function show($id)
@@ -49,14 +65,21 @@ class MedicineController extends Controller
         $medicine = Medicine::find($id);
 
         if ($medicine) {
-            // If 'selled' is provided in the request, update it
+            $request->validate([
+                'name' => 'required|unique:medicines,name,' . $id,
+                'date' => 'nullable|date',
+                'detail' => 'nullable|string',
+                'selled' => 'required|integer',
+                'quantity' => 'required|integer',
+            ]);
+
             $selled = $request->has('selled') ? $request->selled : $medicine->selled;
 
             $medicine->update([
                 'name' => $request->name,
                 'date' => $request->date,
                 'detail' => $request->detail,
-                'selled' => $selled, // Use the previous selled value if not updated
+                'selled' => $selled,
                 'quantity' => $request->quantity,
             ]);
 
@@ -72,19 +95,30 @@ class MedicineController extends Controller
         return redirect()->route('medicines.index')->with('success', 'Medicine deleted successfully.');
     }
 
-    public function sell($id)
+    public function sell(Request $request, $id)
     {
+        $request->validate([
+            'sellQuantity' => 'required|integer|min:1',
+        ]);
+
         $medicine = Medicine::find($id);
 
         // Check if the medicine exists and if there is enough quantity to sell
-        if ($medicine && $medicine->quantity > 0) {
-            $medicine->selled += 1; // Increment the sold count
-            $medicine->quantity -= 1; // Decrement the available quantity
+        if ($medicine && $medicine->quantity >= $request->sellQuantity) {
+            $medicine->selled += $request->sellQuantity; // Increment the sold count
+            $medicine->quantity -= $request->sellQuantity; // Decrement the available quantity
             $medicine->save(); // Save the changes
 
             return redirect()->route('medicines.index')->with('success', 'Medicine sold successfully.');
         }
 
         return redirect()->route('medicines.index')->with('error', 'Not enough quantity to sell.');
+    }
+
+    public function suggestions(Request $request)
+    {
+        $query = $request->query('query');
+        $suggestions = Medicine::where('name', 'like', "%{$query}%")->limit(5)->get(['name']);
+        return response()->json($suggestions);
     }
 }

@@ -8,6 +8,19 @@
     <div class="container d-flex justify-content-center align-items-center min-vh-100">
         <div class="card p-4 shadow-lg w-50">
             <h2 class="text-center mb-4">Add New Medicine</h2>
+
+            @if ($message = Session::get('error'))
+                <div class="alert alert-danger">
+                    <p>{{ $message }}</p>
+                </div>
+            @endif
+
+            @if ($message = Session::get('duplicate'))
+                <div class="alert alert-danger">
+                    <p>{{ $message }}</p>
+                </div>
+            @endif
+
             <form action="{{ route('medicines.store') }}" method="POST">
                 @csrf
                 <div class="form-group mb-3">
@@ -17,12 +30,12 @@
 
                 <div class="form-group mb-3">
                     <label>Date</label>
-                    <input type="date" name="date" class="form-control" required>
+                    <input type="date" name="date" class="form-control">
                 </div>
 
                 <div class="form-group mb-3">
                     <label>Details</label>
-                    <textarea name="detail" class="form-control" rows="4" required></textarea>
+                    <textarea name="detail" class="form-control" rows="4"></textarea>
                 </div>
 
                 <div class="form-group mb-3">

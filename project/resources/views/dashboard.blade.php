@@ -1,6 +1,4 @@
-@extends('layout')
-
-
+@extends('layouts.app')
 
 @section('content')
 
@@ -14,8 +12,6 @@
 
                     <div class="card-header">{{ __('Dashboard') }}</div>
 
-
-
                     <div class="card-body">
 
                         @if (session('success'))
@@ -28,9 +24,9 @@
 
                         @endif
 
-
-
                         You are Logged In
+
+                        <a href="{{ route('pharmacies.index') }}" class="btn btn-primary mt-3">Manage Pharmacies</a>
 
                     </div>
 

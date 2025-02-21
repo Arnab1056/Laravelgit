@@ -10,9 +10,9 @@ class CreateMedicinesTable extends Migration
     {
         Schema::create('medicines', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->date('date');
-            $table->text('detail');
+            $table->string('name')->unique();
+            $table->date('date')->nullable(); // Make the date column nullable
+            $table->text('detail')->nullable(); // Make the detail column nullable
             $table->integer('selled')->default(0);
             $table->integer('quantity');
             $table->timestamps();

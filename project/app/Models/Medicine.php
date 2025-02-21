@@ -9,5 +9,21 @@ class Medicine extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'date', 'detail', 'selled', 'quantity'];
+    protected $fillable = [
+        'name',
+        'date',
+        'detail',
+        'selled',
+        'quantity',
+    ];
+
+    public function pharmacies()
+    {
+        return $this->belongsToMany(Pharmacy::class)->withPivot('quantity');
+    }
+
+    public function pharmacy()
+    {
+        return $this->belongsTo(Pharmacy::class);
+    }
 }

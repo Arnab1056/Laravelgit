@@ -4,7 +4,7 @@
 
 <head>
 
-    <title>MediTracker</title>
+    <title>Pharmacy Management</title>
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
 
@@ -21,28 +21,28 @@
             background-color: #f5f8fa;
         }
 
-        .navbar-laravel {
+        .navbar-laravel {}
             box-shadow: 0 2px 4px rgba(0, 0, 0, .04);
         }
 
         .navbar-brand,
         .nav-link,
         .my-form,
-        .login-form {
+        .login-form {}
             font-family: Raleway, sans-serif;
         }
 
-        .my-form {
+        .my-form {}
             padding-top: 1.5rem;
             padding-bottom: 1.5rem;
         }
 
-        .my-form .row {
+        .my-form .row {}
             margin-left: 0;
             margin-right: 0;
         }
 
-        .login-form {
+        .login-form {}
             padding-top: 1.5rem;
             padding-bottom: 1.5rem;
         }
@@ -59,7 +59,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-light navbar-laravel">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('home') }}">MediTracker</a>
+            <a class="navbar-brand" href="{{ route('home') }}">Pharmacy Management</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>

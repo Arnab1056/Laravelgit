@@ -1,85 +1,111 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pharmacy;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use App\Models\PharmacyMedicine;
+use App\Models\Medicine; // Add this line
 
 class PharmacyController extends Controller
 {
-    // Show all pharmacies
     public function index()
     {
-        $pharmacies = Pharmacy::all();  // Retrieve all pharmacies from the database
-        return view('pharmacies.index', compact('pharmacies'));
+        $pharmacy = auth()->user()->pharmacy;
+        $pharmacyMedicines = PharmacyMedicine::where('pharmacy_id', $pharmacy->id)->paginate(10);
+        return view('pharmacies.index', compact('pharmacy', 'pharmacyMedicines'))->with('i', 0);
     }
 
-    // Show form to create a new pharmacy
-    public function create()
+    public function medicines($pharmacyId)
     {
-        return view('pharmacies.create');
+        $pharmacy = Pharmacy::find($pharmacyId);
+        $medicines = Medicine::paginate(10);
+        return view('pharmacies.medicines', compact('pharmacy', 'medicines'))->with('i', 0);
     }
 
-    // Store new pharmacy in the database
-    public function store(Request $request)
+    public function sell(Request $request, $medicineId)
     {
         $request->validate([
-            'name' => 'required|string',
-            'address' => 'required|string',
-            'phone' => 'required|string',
-            'email' => 'required|email|unique:pharmacies',
-            'password' => 'required|string|min:6',
+            'sellQuantity' => 'required|integer|min:1',
         ]);
 
-        Pharmacy::create([
-            'name' => $request->name,
-            'address' => $request->address,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $pharmacy = auth()->user()->pharmacy;
+        $pharmacyMedicine = PharmacyMedicine::where('pharmacy_id', $pharmacy->id)
+                                            ->where('medicine_id', $medicineId)
+                                            ->first();
 
-        return redirect()->route('pharmacies.index')->with('success', 'Pharmacy added successfully');
+        if ($pharmacyMedicine) {
+            if ($pharmacyMedicine->quantity < $request->sellQuantity) {
+                return redirect()->route('pharmacies.index')
+                                 ->with('error', 'Not available quantity.');
+            }
+
+            $pharmacyMedicine->quantity -= $request->sellQuantity;
+            $pharmacyMedicine->sold += $request->sellQuantity;
+            $pharmacyMedicine->save();
+
+            return redirect()->route('pharmacies.index')
+                             ->with('success', 'Medicine sold successfully.');
+        }
+
+        return redirect()->route('pharmacies.index')
+                         ->with('error', 'Medicine not found.');
     }
 
-    // Show form to edit an existing pharmacy
-    public function edit($id)
+    public function destroyMedicine($id)
     {
-        $pharmacy = Pharmacy::findOrFail($id);
-        return view('pharmacies.edit', compact('pharmacy'));
+        $pharmacyMedicine = PharmacyMedicine::find($id);
+        if ($pharmacyMedicine) {
+            $pharmacyMedicine->delete();
+            return redirect()->route('pharmacies.index')
+                             ->with('success', 'Medicine deleted successfully.');
+        }
+
+        return redirect()->route('pharmacies.index')
+                         ->with('error', 'Medicine not found.');
     }
 
-    // Update an existing pharmacy record
-    public function update(Request $request, $id)
+    public function showMedicine($id)
     {
-        $pharmacy = Pharmacy::findOrFail($id);
+        $pharmacyMedicine = PharmacyMedicine::find($id);
+        $medicine = Medicine::find($pharmacyMedicine->medicine_id);
+        return view('pharmacies.show_medicine', compact('pharmacyMedicine', 'medicine'));
+    }
 
+    public function editMedicine($id)
+    {
+        $pharmacyMedicine = PharmacyMedicine::find($id);
+        return view('pharmacies.edit_medicine', compact('pharmacyMedicine'));
+    }
+
+    public function addMedicineForm($pharmacyId, $medicineId)
+    {
+        $pharmacy = Pharmacy::find($pharmacyId);
+        $medicine = Medicine::find($medicineId);
+        return view('pharmacies.add_medicine_details', compact('pharmacy', 'medicine'));
+    }
+
+    public function storeMedicine(Request $request)
+    {
         $request->validate([
-            'name' => 'required|string',
-            'address' => 'required|string',
-            'phone' => 'required|string',
-            'email' => 'required|email|unique:pharmacies,email,' . $pharmacy->id,
-            'password' => 'nullable|string|min:6',  // Optional password update
+            'medicine_id' => 'required|exists:medicines,id',
+            'price' => 'required|numeric',
+            'sold' => 'required|integer',
         ]);
 
-        $pharmacy->update([
-            'name' => $request->name,
-            'address' => $request->address,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'password' => $request->password ? Hash::make($request->password) : $pharmacy->password,
-        ]);
+        $medicine = Medicine::find($request->medicine_id);
+        $pharmacy = auth()->user()->pharmacy;
 
-        return redirect()->route('pharmacies.index')->with('success', 'Pharmacy updated successfully');
-    }
+        $pharmacyMedicine = new PharmacyMedicine();
+        $pharmacyMedicine->pharmacy_id = $pharmacy->id;
+        $pharmacyMedicine->medicine_id = $request->medicine_id;
+        $pharmacyMedicine->medicine_name = $medicine->name;
+        $pharmacyMedicine->quantity = $request->quantity;
+        $pharmacyMedicine->price = $request->price;
+        $pharmacyMedicine->sold = $request->sold;
+        $pharmacyMedicine->save();
 
-    // Delete a pharmacy from the database
-    public function destroy($id)
-    {
-        $pharmacy = Pharmacy::findOrFail($id);
-        $pharmacy->delete();
-
-        return redirect()->route('pharmacies.index')->with('success', 'Pharmacy deleted successfully');
+        return redirect()->route('pharmacies.medicines', ['pharmacy' => $pharmacy->id])
+                         ->with('success', 'Medicine added successfully.');
     }
 }
