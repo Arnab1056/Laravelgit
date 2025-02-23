@@ -2,48 +2,57 @@
 
 @section('content')
 
-    <div class="row">
-        <div class="col-lg-12 margin-tb">
-            <div class="pull-left">
-                <h2>Create New Medicine</h2>
-            </div>
-            <div class="pull-right">
-                <a class="btn btn-primary" href="{{ route('medicines.index') }}">Back</a>
-            </div>
-        </div>
-    </div>
+    <!-- Link to the CSS file -->
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
-    <form action="{{ route('medicines.store') }}" method="POST">
-        @csrf
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <strong>Name:</strong>
-                    <input type="text" name="name" class="form-control" placeholder="Name">
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="card p-4 shadow-lg w-50">
+            <h2 class="text-center mb-4">Add New Medicine</h2>
+
+            @if ($message = Session::get('error'))
+                <div class="alert alert-danger">
+                    <p>{{ $message }}</p>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <strong>Date:</strong>
+            @endif
+
+            @if ($message = Session::get('duplicate'))
+                <div class="alert alert-danger">
+                    <p>{{ $message }}</p>
+                </div>
+            @endif
+
+            <form action="{{ route('medicines.store') }}" method="POST">
+                @csrf
+                <div class="form-group mb-3">
+                    <label>Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label>Date</label>
                     <input type="date" name="date" class="form-control">
                 </div>
-            </div>
-            <div class="col-md-12">
-                <div class="form-group">
-                    <strong>Details:</strong>
-                    <textarea class="form-control" name="detail" placeholder="Detail"></textarea>
+
+                <div class="form-group mb-3">
+                    <label>Details</label>
+                    <textarea name="detail" class="form-control" rows="4"></textarea>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <strong>Quantity:</strong>
-                    <input type="number" name="quantity" class="form-control" value="0">
+
+                <div class="form-group mb-3">
+                    <label>Selled</label>
+                    <input type="number" name="selled" class="form-control" required>
                 </div>
-            </div>
-            <div class="col-md-12">
-                <button type="submit" class="btn btn-success">Submit</button>
-            </div>
+
+                <div class="form-group mb-4">
+                    <label>Quantity</label>
+                    <input type="number" name="quantity" class="form-control" required>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Add Medicine</button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 
 @endsection

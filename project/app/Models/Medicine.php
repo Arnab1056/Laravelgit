@@ -9,11 +9,6 @@ class Medicine extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'date',
@@ -21,4 +16,14 @@ class Medicine extends Model
         'selled',
         'quantity',
     ];
+
+    public function pharmacies()
+    {
+        return $this->belongsToMany(Pharmacy::class)->withPivot('quantity');
+    }
+
+    public function pharmacy()
+    {
+        return $this->belongsTo(Pharmacy::class);
+    }
 }

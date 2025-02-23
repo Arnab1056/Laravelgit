@@ -1,29 +1,78 @@
 <?php
-
-// Medicine Controller (app/Http/Controllers/MedicineController.php)
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
-use App\Models\Medicine;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Pharmacy; // Ensure this line is present
+use Illuminate\Support\Facades\Hash;
 
-class MedicineController extends Controller {
-    public function showAddMedicine() {
-        $medicines = Medicine::all();
-        return view('pharmacy.add-medicine', compact('medicines'));
+class AuthController extends Controller
+{
+    public function showLoginForm()
+    {
+        return view('auth.login');
     }
 
-    public function storeMedicine(Request $request) {
-        Medicine::create($request->all());
-        return back()->with('success', 'Medicine added successfully!');
+    public function login(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            if ($user->role == 2) { // Check if the user is a medicine maker
+                return redirect()->route('medicines.index');
+            } elseif ($user->role == 3) { // Check if the user is a regular user
+                return redirect()->route('pharmacies.index');
+            } elseif ($user->role == 4) { // Check if the user is a regular user
+                return redirect()->route('searchpage');
+            }
+            return redirect()->intended('/');
+        }
+        return back()->withErrors(['email' => 'Invalid credentials']);
     }
 
-    public function search(Request $request) {
-        $query = $request->input('query');
-        $medicines = Medicine::where('name', 'LIKE', "%$query%")->get();
-        return view('user.search-results', compact('medicines'));
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
     }
 
-    public function manage() {
-        $medicines = Medicine::all();
-        return view('pharmaceutical.manage-medicine', compact('medicines'));
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|integer|in:1,2,3,4',
+        ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+        ]);
+
+        if ($user->role == 3) {
+            // Add values to the pharmacies table
+            Pharmacy::create([
+                'name' => $user->name,
+                'location' => null,
+                'email' => $user->email,
+                'phone' => null,
+                'role' => 3,
+                'user_id' => $user->id,
+            ]);
+        }
+
+        return redirect()->route('login');
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('pharmacies.index');
     }
 }

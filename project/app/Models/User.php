@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Pharmacy;
 
 class User extends Authenticatable
 {
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // Include role attribute
     ];
 
     /**
@@ -41,4 +43,25 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function pharmacy()
+    {
+        return $this->hasOne(Pharmacy::class);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updated(function ($user) {
+            if ($user->pharmacy) {
+                $user->pharmacy->update([
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'location' => $user->location,
+                    'phone' => request()->input('phone'), // Update phone number
+                ]);
+            }
+        });
+    }
 }
